@@ -1,56 +1,89 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-dotenv.config()
-import cookieParser from 'cookie-parser'
-import morgan from 'morgan'
-import helmet from 'helmet'
-import connectDB from './config/connectDB.js'
-import userRouter from './route/user.route.js'
-import categoryRouter from './route/category.route.js'
-import uploadRouter from './route/upload.router.js'
-import subCategoryRouter from './route/subCategory.route.js'
-import productRouter from './route/product.route.js'
-import cartRouter from './route/cart.route.js'
-import addressRouter from './route/address.route.js'
-import orderRouter from './route/order.route.js'
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 
-const app = express()
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
+import helmet from "helmet";
 
-app.use(express.json())
-app.use(cookieParser())
-app.use(morgan())
-app.use(helmet({
-    crossOriginResourcePolicy : false
-}))
+import connectDB from "./config/connectDB.js";
 
-const PORT = 8080 || process.env.PORT 
+import userRouter from "./route/user.route.js";
+import categoryRouter from "./route/category.route.js";
+import uploadRouter from "./route/upload.router.js";
+import subCategoryRouter from "./route/subCategory.route.js";
+import productRouter from "./route/product.route.js";
+import cartRouter from "./route/cart.route.js";
+import addressRouter from "./route/address.route.js";
+import orderRouter from "./route/order.route.js";
 
-app.get("/",(request,response)=>{
-    ///server to client
-    response.json({
-        message : "Server is running " + PORT
-    })
-})
+const app = express();
 
-app.use('/api/user',userRouter)
-app.use("/api/category",categoryRouter)
-app.use("/api/file",uploadRouter)
-app.use("/api/subcategory",subCategoryRouter)
-app.use("/api/product",productRouter)
-app.use("/api/cart",cartRouter)
-app.use("/api/address",addressRouter)
-app.use('/api/order',orderRouter)
+/* ================= CORS CONFIG ================= */
 
-connectDB().then(()=>{
-    app.listen(PORT,()=>{
-        console.log("Server is running",PORT)
-    })
-})
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://e-commerce-frontend-rust-six.vercel.app"
+];
 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow Postman / server-to-server requests
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
+
+/* ================= MIDDLEWARE ================= */
+
+app.use(express.json());
+app.use(cookieParser());
+app.use(morgan("dev"));
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false
+  })
+);
+
+/* ================= ROUTES ================= */
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "Server is running"
+  });
+});
+
+app.use("/api/user", userRouter);
+app.use("/api/category", categoryRouter);
+app.use("/api/file", uploadRouter);
+app.use("/api/subcategory", subCategoryRouter);
+app.use("/api/product", productRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/address", addressRouter);
+app.use("/api/order", orderRouter);
+
+/* ================= SERVER ================= */
+
+const PORT = process.env.PORT || 8080;
+
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.log("DB Connection Error:", err);
+  });
