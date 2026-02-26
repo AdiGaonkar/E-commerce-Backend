@@ -18,72 +18,42 @@ import cartRouter from "./route/cart.route.js";
 import addressRouter from "./route/address.route.js";
 import orderRouter from "./route/order.route.js";
 
-const app = express();
+const app = express()
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
 
-/* ================= CORS CONFIG ================= */
+app.use(express.json())
+app.use(cookieParser())
+app.use(morgan())
+app.use(helmet({
+    crossOriginResourcePolicy : false
+}))
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://e-commerce-frontend-rust-six.vercel.app"
-];
+const PORT = 8080 || process.env.PORT 
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow Postman / server-to-server requests
-      if (!origin) return callback(null, true);
+app.get("/",(request,response)=>{
+    ///server to client
+    response.json({
+        message : "Server is running " + PORT
+    })
+})
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
+app.use('/api/user',userRouter)
+app.use("/api/category",categoryRouter)
+app.use("/api/file",uploadRouter)
+app.use("/api/subcategory",subCategoryRouter)
+app.use("/api/product",productRouter)
+app.use("/api/cart",cartRouter)
+app.use("/api/address",addressRouter)
+app.use('/api/order',orderRouter)
 
-/* ================= MIDDLEWARE ================= */
+connectDB().then(()=>{
+    app.listen(PORT,()=>{
+        console.log("Server is running",PORT)
+    })
+})
 
-app.use(express.json());
-app.use(cookieParser());
-app.use(morgan("dev"));
-
-app.use(
-  helmet({
-    crossOriginResourcePolicy: false
-  })
-);
-
-/* ================= ROUTES ================= */
-
-app.get("/", (req, res) => {
-  res.json({
-    message: "Server is running"
-  });
-});
-
-app.use("/api/user", userRouter);
-app.use("/api/category", categoryRouter);
-app.use("/api/file", uploadRouter);
-app.use("/api/subcategory", subCategoryRouter);
-app.use("/api/product", productRouter);
-app.use("/api/cart", cartRouter);
-app.use("/api/address", addressRouter);
-app.use("/api/order", orderRouter);
-
-/* ================= SERVER ================= */
-
-const PORT = process.env.PORT || 8080;
-
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`✅ Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.log("DB Connection Error:", err);
-  });
