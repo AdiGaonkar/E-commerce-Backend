@@ -18,42 +18,61 @@ import cartRouter from "./route/cart.route.js";
 import addressRouter from "./route/address.route.js";
 import orderRouter from "./route/order.route.js";
 
-const app = express()
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://e-commerce-frontend-ruddy-beta.vercel.app/",
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
+const app = express();
 
-app.use(express.json())
-app.use(cookieParser())
-app.use(morgan())
-app.use(helmet({
-    crossOriginResourcePolicy : false
-}))
+// allowed frontends
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://e-commerce-frontend-ruddy-beta.vercel.app"
+];
 
-const PORT = 8080 || process.env.PORT 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  })
+);
 
-app.get("/",(request,response)=>{
-    ///server to client
-    response.json({
-        message : "Server is running " + PORT
-    })
-})
+app.use(express.json());
+app.use(cookieParser());
+app.use(morgan("dev"));
 
-app.use('/api/user',userRouter)
-app.use("/api/category",categoryRouter)
-app.use("/api/file",uploadRouter)
-app.use("/api/subcategory",subCategoryRouter)
-app.use("/api/product",productRouter)
-app.use("/api/cart",cartRouter)
-app.use("/api/address",addressRouter)
-app.use('/api/order',orderRouter)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false
+  })
+);
 
-connectDB().then(()=>{
-    app.listen(PORT,()=>{
-        console.log("Server is running",PORT)
-    })
-})
+const PORT = process.env.PORT || 8080;
 
+// test route
+app.get("/", (req, res) => {
+  res.json({
+    message: "Server is running on port " + PORT
+  });
+});
+
+// routes
+app.use("/api/user", userRouter);
+app.use("/api/category", categoryRouter);
+app.use("/api/file", uploadRouter);
+app.use("/api/subcategory", subCategoryRouter);
+app.use("/api/product", productRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/address", addressRouter);
+app.use("/api/order", orderRouter);
+
+// connect DB + start server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log("Server running on port", PORT);
+  });
+});
