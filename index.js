@@ -20,7 +20,7 @@ import orderRouter from "./route/order.route.js";
 
 const app = express()
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: process.env.FRONTEND_URL || "https://e-commerce-frontend-ruddy-beta.vercel.app/",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
