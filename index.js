@@ -23,7 +23,7 @@ const app = express();
 // allowed frontends
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://e-commerce-frontend-ruddy-beta.vercel.app"
+  "https://e-commerce-frontend-hhvf.onrender.com"
 ];
 
 app.use(
